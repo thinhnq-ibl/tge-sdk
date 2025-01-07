@@ -1,0 +1,17 @@
+{
+    "name": "thinhnguyen/tge-sdk",
+    "type": "sdk",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Thinhnguyen\\TgeSdk\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "thinhnguyen",
+            "email": "thinhnq@blockchainlabs.asia"
+        }
+    ],
+    "require": {}
+}
