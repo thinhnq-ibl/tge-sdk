@@ -1,6 +1,6 @@
 <?php
 
-namespace Rexfordnyrk\Tempconv;
+namespace Thinhnguyen\TgeSdk;
 
 class TemperatureConverter
 {
