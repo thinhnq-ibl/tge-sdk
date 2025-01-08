@@ -23,4 +23,12 @@ class ApiService
         $response = $this->client->get("/get");
         return $response->getBody();
     }
+
+    public function putJsonData()
+    {
+        $response = $this->client->put("/put", [
+            'json' => ['foo' => 'bar']
+        ]);
+        return $response->getBody();
+    }
 }
