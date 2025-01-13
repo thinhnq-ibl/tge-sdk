@@ -33,17 +33,17 @@ class ApiService
         return $response->getBody();
     }
 
-    public function checkOldPassword()
+    public function checkOldPassword($username, $password)
     {
         $nonce = time();
-        $body = ['username' => 'thinhnguyen', 'password' => '123456'];
-        $checksum = $this->createCheckSum($this->apiSecret, 'POST', `$this->baseUri//user/check/old-password`, $body, $nonce);
-        $response = $this->client->put("/user/check/old-password", [
+        $body = ['username' => $username, 'password' => $password];
+        $checksum = $this->createCheckSum($this->apiSecret, 'POST', $this->baseUri . '/user/check/old-password', $body, $nonce);
+        $response = $this->client->post("/user/check/old-password", [
             'json' => $body,
             'headers' => [
                 'x-api-key' => $this->apiKey,
-                'x-api-nonce' => $nonce,
-                'x-api-checksum' => $checksum
+                'x-nonce' => $nonce,
+                'x-checksum' => $checksum
             ]
         ]);
         return $response->getBody();
