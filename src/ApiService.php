@@ -33,12 +33,13 @@ class ApiService
         return $response->getBody();
     }
 
-    public function putJsonData()
+    public function checkOldPassword()
     {
         $nonce = time();
-        $checksum = $this->createCheckSum($this->apiSecret, 'PUT', `$this->baseUri/put`, ['foo' => 'bar'], $nonce);
-        $response = $this->client->put("/put", [
-            'json' => ['foo' => 'bar'],
+        $body = ['username' => 'thinhnguyen', 'password' => '123456'];
+        $checksum = $this->createCheckSum($this->apiSecret, 'POST', `$this->baseUri//user/check/old-password`, $body, $nonce);
+        $response = $this->client->put("/user/check/old-password", [
+            'json' => $body,
             'headers' => [
                 'x-api-key' => $this->apiKey,
                 'x-api-nonce' => $nonce,
