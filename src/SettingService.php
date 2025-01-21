@@ -1,9 +1,9 @@
 <?php
 
-namespace Thinhnguyen\TgeSdk;
+namespace EmurgoLabs\TgeSdk;
 use GuzzleHttp\Client;
 
-class ApiService
+class SettingService
 {
     private $client;
     private $apiKey;
@@ -33,6 +33,8 @@ class ApiService
         return $response->getBody();
     }
 
+
+
     public function checkOldPassword($username, $password)
     {
         $nonce = time();
@@ -48,8 +50,6 @@ class ApiService
         ]);
         return $response->getBody();
     }
-
-
 
     public function createCheckSum($secretKey, $method, $apiUri, $body, $nonce)
     {

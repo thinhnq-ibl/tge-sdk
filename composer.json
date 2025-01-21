@@ -1,10 +1,10 @@
 {
-  "name": "thinhnguyen/tge-sdk",
+  "name": "emurgo-labs/tge-sdk",
   "type": "sdk",
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Thinhnguyen\\TgeSdk\\": "src/"
+      "EmurgoLabs\\TgeSdk\\": "src/"
     }
   },
   "authors": [
