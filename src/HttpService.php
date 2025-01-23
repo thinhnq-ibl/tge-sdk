@@ -12,9 +12,9 @@ class HttpService
 
     public function __construct()
     {
-        $this->apiKey = $_ENV["SDK_API_KEY"];
-        $this->apiSecret = $_ENV["SDK_SECRET_KEY"];
-        $this->baseUri = $_ENV["SDK_API_BASE_URI"];
+        $this->apiKey = $_ENV["SDK_TGE_API_KEY"];
+        $this->apiSecret = $_ENV["SDK_TGE_SECRET_KEY"];
+        $this->baseUri = $_ENV["SDK_TGE_API_BASE_URI"];
         $this->client = new Client([
             // Base URI is used with relative requests
             'base_uri' => $this->baseUri,
