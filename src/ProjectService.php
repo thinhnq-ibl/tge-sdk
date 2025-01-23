@@ -9,52 +9,240 @@ class ProjectService
     private $apiKey;
     private $apiSecret;
     private $baseUri;
+    private $httpService;
 
-    public function __construct($baseUri, $apiKey, $apiSecret)
+    public function __construct()
     {
-        $this->client = new Client([
-            // Base URI is used with relative requests
-            'base_uri' => $baseUri,
-            // You can set any number of default request options.
-            'timeout' => 2.0,
-        ]);
-        $this->apiKey = $apiKey;
-        $this->apiSecret = $apiSecret;
-        $this->baseUri = $baseUri;
+        $this->apiKey = $_ENV["SDK_API_KEY"];
+        $this->apiSecret = $_ENV["SDK_SECRET_KEY"];
+        $this->baseUri = $_ENV["SDK_API_BASE_URI"];
+        $this->httpService = new HttpService();
     }
 
-    public function getData()
+    /* 
+     * Get a project mint from the API
+     * @param string $id
+     * @return object
+     */
+    public function getProjectMint($id)
     {
-        $response = $this->client->get("/get", [
-            "headers" => [
-                "x-api-key" => $this->apiKey
-            ]
-        ]);
-        return $response->getBody();
+        return $this->httpService->getMessage("/project/mint/" . $id);
     }
 
+    /* 
+     * Get all project mint from the API
+     * @param string $userId
+     * @param string $toAddress
+     * @param string $name
+     * @param string $symbol
+     * @return object
+     */
+    public function getAllProjectMint(
+        $userId,
+        $toAddress,
+        $name,
+        $symbol
+    ) {
+        $data = array(
+            'userId' => $userId,
+            'toAddress' => $toAddress,
+            'name' => $name,
+            'symbol' => $symbol
+        );
 
+        $query = http_build_query($data);
+        return $this->httpService->getMessage("/project/mint/all?" . $query);
+    }
 
-    public function checkOldPassword($username, $password)
+    /* 
+     * Get all project from the API
+     * @param string $userId
+     * @param string $toAddress
+     * @param string $name
+     * @param string $symbol
+     * @return object
+     */
+    public function getAllProject(
+        $userId,
+        $toAddress,
+        $name,
+        $symbol
+    ) {
+        $data = array(
+            'userId' => $userId,
+            'toAddress' => $toAddress,
+            'name' => $name,
+            'symbol' => $symbol
+        );
+
+        $query = http_build_query($data);
+        return $this->httpService->getMessage("/project/all?" . $query);
+    }
+
+    /* 
+     * Get a project from the API
+     * @param string $id
+     * @return object
+     */
+    public function getProject($id)
     {
+        return $this->httpService->getMessage("/project/" . $id);
+    }
+
+    /* 
+     * Get a project credit from the API
+     * @param string $id
+     * @param string $address
+     * @return object
+     */
+    public function getProjectCreditById($id, $address)
+    {
+        return $this->httpService->getMessage("/project/credit/" . $address . "/" . $id);
+    }
+
+    /* 
+     * Get a project credit from the API
+     * @param string $address
+     * @return object
+     */
+    public function getProjectCredit($address)
+    {
+        return $this->httpService->getMessage("/project/credit/" . $address);
+    }
+
+    /* 
+     * Create a project mint from the API
+     * @param string $userId
+     * @param string $toAddress
+     * @param string $boundary
+     * @param string $initialPlantedTree
+     * @param string $currentPlantedTree
+     * @param string $maxPlantedTree
+     * @param string $ratio
+     * @param string $carbonCredit
+     * @param string $name
+     * @param string $symbol
+     * @return object
+     */
+    public function createProjectMint(
+        $userId,
+        $toAddress,
+        $boundary,
+        $initialPlantedTree,
+        $currentPlantedTree,
+        $maxPlantedTree,
+        $ratio,
+        $carbonCredit,
+        $name,
+        $symbol
+    ) {
+        $originUri = "/project/mint";
         $nonce = time();
-        $body = ['username' => $username, 'password' => $password];
-        $checksum = $this->createCheckSum($this->apiSecret, 'POST', $this->baseUri . '/user/check/old-password', $body, $nonce);
-        $response = $this->client->post("/user/check/old-password", [
-            'json' => $body,
-            'headers' => [
-                'x-api-key' => $this->apiKey,
-                'x-nonce' => $nonce,
-                'x-checksum' => $checksum
-            ]
-        ]);
-        return $response->getBody();
+        $body = [
+            'userId' => $userId,
+            'toAddress' => $toAddress,
+            'boundary' => $boundary,
+            'initialPlantedTree' => $initialPlantedTree,
+            'currentPlantedTree' => $currentPlantedTree,
+            'maxPlantedTree' => $maxPlantedTree,
+            'ratio' => $ratio,
+            'carbonCredit' => $carbonCredit,
+            'name' => $name,
+            'symbol' => $symbol
+        ];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            'POST',
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->postMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
     }
 
-    public function createCheckSum($secretKey, $method, $apiUri, $body, $nonce)
-    {
-        $message = $apiUri . $method . json_encode($body) . $nonce;
-        $checksum = hash_hmac('sha256', $message, $secretKey);
-        return $checksum;
+    /* 
+     * Create a project from the API
+     * @param string $userId
+     * @param string $toAddress
+     * @param string $boundary
+     * @param string $initialPlantedTree
+     * @param string $currentPlantedTree
+     * @param string $maxPlantedTree
+     * @param string $ratio
+     * @param string $carbonCredit
+     * @param string $name
+     * @param string $symbol
+     * @return object
+     */
+    public function createAudit(
+        $id,
+        $userId,
+        $currentPlantedTree,
+        $carbonCredit
+    ) {
+        $originUri = "/project/audit/" . $id;
+        $nonce = time();
+        $body = [
+            "userId" => $userId,
+            "currentPlantedTree" => $currentPlantedTree,
+            "carbonCredit" => $carbonCredit
+        ];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            "POST",
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->postMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
+    }
+
+    /* 
+     * Update a project mint from the API
+     * @param string $id
+     * @param string $currentPlantedTree
+     * @param string $carbonCredit
+     * @param string $isMinted
+     * @param string $isAudited
+     * @return object
+     */
+    public function updateMint(
+        $id,
+        $currentPlantedTree,
+        $carbonCredit,
+        $isMinted,
+        $isAudited
+    ) {
+        $originUri = "/project/update/" . $id;
+        $nonce = time();
+        $body = [
+            "currentPlantedTree" => $currentPlantedTree,
+            "carbonCredit" => $carbonCredit,
+            "isMinted" => $isMinted,
+            "isAudited" => $isAudited
+        ];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            "PATCH",
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->patchMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
     }
 }

@@ -9,52 +9,134 @@ class SettingService
     private $apiKey;
     private $apiSecret;
     private $baseUri;
+    private $httpService;
 
-    public function __construct($baseUri, $apiKey, $apiSecret)
+    public function __construct()
     {
-        $this->client = new Client([
-            // Base URI is used with relative requests
-            'base_uri' => $baseUri,
-            // You can set any number of default request options.
-            'timeout' => 2.0,
-        ]);
-        $this->apiKey = $apiKey;
-        $this->apiSecret = $apiSecret;
-        $this->baseUri = $baseUri;
+        $this->apiKey = $_ENV["SDK_API_KEY"];
+        $this->apiSecret = $_ENV["SDK_SECRET_KEY"];
+        $this->baseUri = $_ENV["SDK_API_BASE_URI"];
+        $this->httpService = new HttpService();
     }
 
-    public function getData()
+    /* 
+     * Get all setting from the API
+     * @param string $key
+     * @return object
+     */
+    public function getAll($key)
     {
-        $response = $this->client->get("/get", [
-            "headers" => [
-                "x-api-key" => $this->apiKey
-            ]
-        ]);
-        return $response->getBody();
+        return $this->httpService->getMessage("/setting?key=" . $key);
     }
 
-
-
-    public function checkOldPassword($username, $password)
+    /* 
+     * Get a setting from the API
+     * @param string $id
+     * @return object
+     */
+    public function getSetting($id)
     {
+        return $this->httpService->getMessage("/setting/" . $id);
+    }
+
+    /* 
+     * Create a new setting
+     * @param string $key
+     * @param string $value
+     * @param string $type
+     * @param bool $isActive
+     * @return object
+     */
+    public function newSetting(
+        $key,
+        $value,
+        $type,
+        $isActive = true
+    ) {
+        $originUri = "/setting";
         $nonce = time();
-        $body = ['username' => $username, 'password' => $password];
-        $checksum = $this->createCheckSum($this->apiSecret, 'POST', $this->baseUri . '/user/check/old-password', $body, $nonce);
-        $response = $this->client->post("/user/check/old-password", [
-            'json' => $body,
-            'headers' => [
-                'x-api-key' => $this->apiKey,
-                'x-nonce' => $nonce,
-                'x-checksum' => $checksum
-            ]
-        ]);
-        return $response->getBody();
+        $body = [
+            'key' => $key,
+            'value' => $value,
+            'type' => $type,
+            'isActive' => $isActive
+        ];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            'POST',
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->postMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
     }
 
-    public function createCheckSum($secretKey, $method, $apiUri, $body, $nonce)
+    /* 
+     * Update a setting
+     * @param string $id
+     * @param string $key
+     * @param string $value
+     * @param string $type
+     * @param bool $isActive
+     * @return object
+     */
+    public function updateSetting(
+        $id,
+        $key,
+        $value,
+        $type,
+        $isActive = true
+    ) {
+        $originUri = "/setting/" . $id;
+        $nonce = time();
+        $body = [
+            'key' => $key,
+            'value' => $value,
+            'type' => $type,
+            'isActive' => $isActive
+        ];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            'PATCH',
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->patchMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
+    }
+
+    /* 
+     * Delete a setting
+     * @param string $id
+     * @return object
+     */
+    public function deleteSetting($id)
     {
-        $message = $apiUri . $method . json_encode($body) . $nonce;
-        $checksum = hash_hmac('sha256', $message, $secretKey);
-        return $checksum;
+        $originUri = "/setting/" . $id;
+        $nonce = time();
+        $body = [];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            'DELETE',
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->deleteMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
     }
 }

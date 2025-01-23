@@ -9,52 +9,48 @@ class SubGraphService
     private $apiKey;
     private $apiSecret;
     private $baseUri;
+    private $httpService;
 
-    public function __construct($baseUri, $apiKey, $apiSecret)
+    public function __construct()
     {
-        $this->client = new Client([
-            // Base URI is used with relative requests
-            'base_uri' => $baseUri,
-            // You can set any number of default request options.
-            'timeout' => 2.0,
-        ]);
-        $this->apiKey = $apiKey;
-        $this->apiSecret = $apiSecret;
-        $this->baseUri = $baseUri;
+        $this->apiKey = $_ENV["SDK_API_KEY"];
+        $this->apiSecret = $_ENV["SDK_SECRET_KEY"];
+        $this->baseUri = $_ENV["SDK_API_BASE_URI"];
+        $this->httpService = new HttpService();
     }
 
-    public function getData()
+    /* 
+     * Get health check from the API
+     * @return object
+     */
+    public function healthCheck()
     {
-        $response = $this->client->get("/get", [
-            "headers" => [
-                "x-api-key" => $this->apiKey
-            ]
-        ]);
-        return $response->getBody();
+        return $this->httpService->getMessage("/subgraph/healthcheck");
     }
 
-
-
-    public function checkOldPassword($username, $password)
+    /* 
+     * Get a query from the API
+     * @param string $query
+     * @param array $variables
+     * @return object
+     */
+    public function query($query, $variables)
     {
+        $originUri = "/subgraph/query";
         $nonce = time();
-        $body = ['username' => $username, 'password' => $password];
-        $checksum = $this->createCheckSum($this->apiSecret, 'POST', $this->baseUri . '/user/check/old-password', $body, $nonce);
-        $response = $this->client->post("/user/check/old-password", [
-            'json' => $body,
-            'headers' => [
-                'x-api-key' => $this->apiKey,
-                'x-nonce' => $nonce,
-                'x-checksum' => $checksum
-            ]
-        ]);
-        return $response->getBody();
-    }
-
-    public function createCheckSum($secretKey, $method, $apiUri, $body, $nonce)
-    {
-        $message = $apiUri . $method . json_encode($body) . $nonce;
-        $checksum = hash_hmac('sha256', $message, $secretKey);
-        return $checksum;
+        $body = ['query' => $query, 'variables' => $variables];
+        $checksum = $this->httpService->createCheckSum(
+            $this->apiSecret,
+            'POST',
+            $this->baseUri . $originUri,
+            $body,
+            $nonce
+        );
+        return $this->httpService->postMessage(
+            $originUri,
+            $body,
+            $nonce,
+            $checksum
+        );
     }
 }
